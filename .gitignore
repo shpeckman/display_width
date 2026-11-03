@@ -1,0 +1,10 @@
+# .gitignore
+/docs/
+/.docs/
+/lib/
+/bin/
+/out/
+/.shards/
+*.dwarf
+shard.lock
+bench-suite

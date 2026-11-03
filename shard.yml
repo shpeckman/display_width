@@ -1,0 +1,17 @@
+# shard.yml
+name: display_width
+version: 0.1.0
+
+authors:
+  - shpeckman
+
+description: |
+  Terminal cell widths (0, 1 or 2) of code points, UTF-8 bytes and text for Crystal, from Unicode
+  18.0.0 tables and kitty's algorithm for splitting text into grapheme cluster cells.
+
+  It is built for TUIs: allocation-free, with a word-at-a-time ASCII path, compile-time embedded
+  tables and a stream for text that arrives in chunks.
+
+crystal: ">= 1.21"
+
+license: MIT
