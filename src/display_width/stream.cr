@@ -4,6 +4,7 @@ require "./engine"
 
 module DisplayWidth
   # Measures text that arrives in pieces: UTF-8 chunks split anywhere, or code points one at a time.
+  # Escape sequences can be split too.
   #
   # `write` yields the width of each cluster once it is finished, which is when the next one starts
   # or at `flush`. `advance` returns how far the text moved the cursor, as a terminal moves it: a
@@ -64,7 +65,7 @@ module DisplayWidth
     end
 
     # Ends the text: an unfinished UTF-8 sequence becomes U+FFFD, and the open cluster is yielded.
-    # What follows starts with no cell to join.
+    # What follows starts with no cell to join, outside any escape sequence.
     def flush(& : Int32 ->) : Nil
       settle { |width| yield width }
       @engine.finish(0) { |_, _, width| yield width }

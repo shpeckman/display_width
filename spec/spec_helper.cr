@@ -6,6 +6,7 @@ DATA = File.join(__DIR__, "data")
 
 LEGACY = DisplayWidth::Policy.new(graphemes: false)
 WIDE   = DisplayWidth::Policy.new(ambiguous: 2)
+RAW    = DisplayWidth::Policy.new(escapes: false)
 
 def clusters(text : String | Bytes, policy = DisplayWidth::Policy.new) : Array({Int32, Int32, Int32})
   found = [] of {Int32, Int32, Int32}

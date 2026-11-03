@@ -2,10 +2,15 @@
 require "./spec_helper"
 
 describe DisplayWidth::Policy do
-  it "defaults to graphemes and narrow ambiguous code points" do
+  it "defaults to graphemes, escape sequences and narrow ambiguous code points" do
     policy = DisplayWidth::Policy.new
     policy.ambiguous.should eq(1)
     policy.graphemes?.should be_true
+    policy.escapes?.should be_true
+  end
+
+  it "turns escape sequences off" do
+    DisplayWidth::Policy.new(escapes: false).escapes?.should be_false
   end
 
   it "rejects other ambiguous widths" do

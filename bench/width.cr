@@ -10,6 +10,8 @@ LINES = {
              "done \u{2705} \u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467}\u{200D}\u{1F466} \u{1F389}",
   "combining" => "e\u{0301} a\u{0308} \u{0915}\u{094D}\u{0937} \u{0E01}\u{0E33} \u{1100}\u{1161}\u{11A8} " \
                  "n\u{0303}o\u{0302} Z\u{0335}a\u{0336}l\u{0337}g\u{0338}o",
+  "styled" => "\e[1;34mINFO\e[0m \e]8;;https://ci.example.org/builds/1234\e\\build #1234\e]8;;\e\\ " \
+              "finished in \e[32m12.3s\e[0m with \e[33m2 warnings\e[0m and \e[31m0 errors\e[0m",
 }
 
 LINES.each do |name, line|
