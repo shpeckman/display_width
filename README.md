@@ -6,7 +6,8 @@ clusters (UAX #29 revision 49), and places them in cells by
 [kitty's algorithm for splitting text into cells](https://sw.kovidgoyal.net/kitty/text-sizing-protocol/#the-algorithm-for-splitting-text-into-cells).
 Escape sequences (styles, hyperlinks, ...) take no cells. Input can be code
 points or UTF-8 bytes, whole or as a stream. On top of the widths, it
-truncates, pads and expands tabs.
+truncates, pads and expands tabs; below them, a terminal emulator can place
+code points in cells one at a time.
 
 It is built for TUIs: nothing allocates, printable ASCII is measured eight bytes
 at a time, and the tables are embedded at compile time.
@@ -37,6 +38,7 @@ DisplayWidth.pad("漢", 4)           # => "漢  "
 - [Columns](#columns)
 - [Policy](#policy)
 - [Streams](#streams)
+- [Placing code points](#placing-code-points)
 - [How cells are counted](#how-cells-are-counted)
 - [Performance](#performance)
 - [Updating Unicode](#updating-unicode)
@@ -259,6 +261,35 @@ cursor.advance("mple.org\e\\link")               # => 4
 
 After `flush`, what follows starts with no cell to join, outside any escape
 sequence.
+
+## Placing code points
+
+A terminal emulator draws text as it arrives, one code point at a time, and
+reads escape sequences itself. `DisplayWidth::Placer` tells it what each code
+point does to its cells, by the same rules `of` and `each_cluster` follow.
+`put` returns a `Placer::Step`, and `width` is the open cluster's width after it:
+
+| Step    | What the code point did                                                                |
+|---------|----------------------------------------------------------------------------------------|
+| `Start` | Opened a cluster of `width` cells. With a `width` of 0 it has no cell: drop it         |
+| `Join`  | Joined the open cluster; `width` may have changed (VS16, VS15, SARA AM). If 0, drop it |
+| `Skip`  | Discarded: an invalid code point while a cluster is open                               |
+
+```crystal
+placer = DisplayWidth::Placer.new
+placer.put('\u{2764}') # => Start, placer.width == 1: a cell of one column
+placer.put(0xFE0F)     # => Join, placer.width == 2: widen that cell
+placer.reset           # the cursor moved: nothing joins that cell any more
+placer.put(0x301)      # => Start, placer.width == 0: no cell to join, drop it
+```
+
+`reset` it wherever the cell it holds stops being the one before the cursor.
+`policy=` switches policies (for mode 2027) from the next code point on.
+
+For a fast path, `DisplayWidth.props(codepoint)` gives a code point's
+`Props`, and `Policy#cells(props)` its cells. While `Placer#plain?`, a code
+point whose `Props#plain?` holds (and is not `Props#invalid?`) starts a cell
+of its own; `Placer#plain!(codepoint, width)` records it without a full step.
 
 ## How cells are counted
 

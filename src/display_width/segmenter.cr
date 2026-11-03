@@ -19,11 +19,11 @@ module DisplayWidth
       @state = START
     end
 
-    # Whether printable ASCII starts a cluster here: nothing, or Grapheme_Cluster_Break=Other, came last.
+    # Whether a code point whose `Props#plain?` holds (printable ASCII among them) starts a cluster
+    # here: unless a Prepend came last, as `step` decides for them.
     @[AlwaysInline]
     def plain? : Bool
-      prev = @state & 0xF
-      prev == Break::Other.value || prev == START
+      @state & 0xF != Break::Prepend.value
     end
 
     # Moves past printable ASCII.

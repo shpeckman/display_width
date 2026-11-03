@@ -1,17 +1,13 @@
 # src/display_width/engine.cr
-require "./tables"
-require "./segmenter"
+require "./placer"
 require "./escape"
 require "./utf8"
-require "./policy"
 
 module DisplayWidth
   # :nodoc:
-  # kitty's algorithm for splitting text into cells, holding back the cluster still open.
-  #
-  # A C0 control is a cluster of its own. A cluster absorbs invalid code points (DEL, C1, surrogates,
-  # noncharacters) without stepping the segmenter, as kitty discards them. Zero-width code points with
-  # no cell to join form a zero-width cluster, as kitty discards those too.
+  # kitty's algorithm for splitting text into cells over `Placer`, holding back the cluster still
+  # open: a C0 control is a cluster of its own, invalid code points join the open cluster, and
+  # zero-width code points with no cell to join form a zero-width cluster.
   #
   # Escape sequences leave the open cluster and the segmenter alone: kitty rebuilds its segmentation
   # state from the cell before the cursor after each one (`init_segmentation_state` in `screen.c`).
@@ -21,45 +17,26 @@ module DisplayWidth
   #
   # Clusters are yielded as offset, size, width and whether they are escape sequences.
   struct Engine
-    VS15 = 0xFE0E
-    VS16 = 0xFE0F
-
     # `@held` when no escape sequence is open or held back.
     NOTHING = -1
     # `@held` when a sequence is open but none of it is held back: a control inside a CSI took its
     # start into a cluster.
     OPEN = -2
 
-    enum Kind : UInt8
-      None
-      Cell
-      Orphan
-      Control
-    end
+    # Cells of the clusters closed so far.
+    @done = 0
+    @start = 0
+    @held = NOTHING
+    @placer : Placer
+    @escape = Escape.new
 
-    # What a code point did to the clusters.
-    enum Step : UInt8
-      # Discarded, or opened an escape sequence.
-      Skip
-      # Joined the open cluster.
-      Join
-      # Started a cluster, finishing the open one.
-      Start
+    def initialize(policy : Policy)
+      @placer = Placer.new(policy)
     end
 
     # Cells of all clusters so far, the open one included.
-    getter total = 0
-    # Cells of the open cluster.
-    getter width = 0
-    @kind = Kind::None
-    @start = 0
-    @held = NOTHING
-    @base = false
-    @segmenter = Segmenter.new
-    @escape = Escape.new
-    @policy : Policy
-
-    def initialize(@policy : Policy)
+    def total : Int32
+      @done &+ @placer.width
     end
 
     # Yields every cluster of *bytes*.
@@ -89,19 +66,16 @@ module DisplayWidth
       while i < size
         if @held == NOTHING
           while i < size
-            if ptr[i] &- 0x20 < 0x5F && @segmenter.plain?
+            if ptr[i] &- 0x20 < 0x5F && @placer.plain?
               n = UTF8.ascii(ptr + i, size &- i)
-              yield @start, i &- @start, @width, false unless @kind.none?
+              yield @start, i &- @start, @placer.width, false if @placer.open?
+              @done &+= @placer.width &+ n &- 1
               last = i &+ n &- 1
               while i < last
                 yield i, 1, 1, false
                 i &+= 1
               end
-              @kind = Kind::Cell
-              @width = 1
-              @total &+= n
-              @base = DisplayWidth.props(ptr[last].to_i32).emoji_base?
-              @segmenter.plain!
+              @placer.plain!(ptr[last].to_i32, 1)
               @start = last
               i = last &+ 1
               next
@@ -137,19 +111,19 @@ module DisplayWidth
     # Yields the open cluster and the escape sequences held back after it, ending at *offset*, and
     # starts afresh.
     def finish(offset : Int32, & : Int32, Int32, Int32, Bool ->) : Nil
-      release(@start, @width, !@kind.none?, offset) { |o, s, w, e| yield o, s, w, e }
-      @kind = Kind::None
-      @width = 0
+      release(@start, @placer.width, @placer.open?, offset) { |o, s, w, e| yield o, s, w, e }
+      @done &+= @placer.width
+      @placer.reset
       @start = offset
-      @segmenter.reset
       @escape.reset
     end
 
     # Feeds the code point at *offset* while no escape sequence is open or held back.
     @[AlwaysInline]
     private def plain(codepoint : Int32, offset : Int32, & : Int32, Int32, Int32, Bool ->) : Nil
-      start, width, open = @start, @width, !@kind.none?
+      start, width, open = @start, @placer.width, @placer.open?
       return unless push(codepoint, offset).start?
+      @done &+= width
       yield start, offset &- start, width, false if open
       @start = offset
     end
@@ -160,7 +134,7 @@ module DisplayWidth
         @held = offset if @held == OPEN
         return
       end
-      start, width, open = @start, @width, !@kind.none?
+      start, width, open = @start, @placer.width, @placer.open?
       case push(codepoint, offset)
       in .skip?
         return
@@ -169,6 +143,7 @@ module DisplayWidth
         return
       in .start?
       end
+      @done &+= width
       release(start, width, open, offset) { |o, s, w, e| yield o, s, w, e }
       @held = OPEN unless @escape.ground?
       @start = offset
@@ -190,65 +165,13 @@ module DisplayWidth
 
     # Feeds *codepoint*, at *offset*, outside escape sequences.
     @[AlwaysInline]
-    private def push(codepoint : Int32, offset : Int32) : Step
-      if codepoint.to_u32! < 0x20
-        if codepoint == Escape::ESC && @policy.escapes?
-          @escape.start
-          @held = offset if @held < 0
-          return Step::Skip
-        end
-        @segmenter.reset
-        open(Kind::Control, 0)
-        return Step::Start
+    private def push(codepoint : Int32, offset : Int32) : Placer::Step
+      if codepoint == Escape::ESC && @placer.policy.escapes?
+        @escape.start
+        @held = offset if @held < 0
+        return Placer::Step::Skip
       end
-      props = DisplayWidth.props(codepoint)
-      if props.invalid?
-        return Step::Skip if @kind.cell? || @kind.orphan?
-        open(Kind::Orphan, 0)
-        return Step::Start
-      end
-      boundary = !@policy.graphemes? || @segmenter.step(props)
-      width = @policy.cells(props)
-      if @kind.cell?
-        if !boundary || width == 0
-          join(codepoint, props)
-          return Step::Join
-        end
-      elsif width == 0
-        return Step::Join if @kind.orphan?
-        open(Kind::Orphan, 0)
-        return Step::Start
-      end
-      open(Kind::Cell, width)
-      @base = props.emoji_base?
-      Step::Start
-    end
-
-    @[AlwaysInline]
-    private def open(kind : Kind, width : Int32) : Nil
-      @kind = kind
-      @width = width
-      @total &+= width
-    end
-
-    @[AlwaysInline]
-    private def join(codepoint : Int32, props : Props) : Nil
-      if @policy.graphemes?
-        if codepoint == VS16
-          resize(1) if @width == 1 && @base
-        elsif codepoint == VS15
-          resize(-1) if @width == 2 && @base
-        elsif @width == 1 && props.widens?
-          resize(1)
-        end
-      end
-      @base = props.emoji_base?
-    end
-
-    @[AlwaysInline]
-    private def resize(by : Int32) : Nil
-      @width &+= by
-      @total &+= by
+      @placer.put(codepoint)
     end
   end
 end
