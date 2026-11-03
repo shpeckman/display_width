@@ -29,7 +29,8 @@ module DisplayWidth
       @classes = (0b10_01_00 | (@ambiguous << 6)).to_u8!
     end
 
-    # :nodoc:
+    # Cells a code point with *props* takes on its own: 0, 1 or 2. Controls and invalid code points
+    # are the caller's: `DisplayWidth.of` gives them 0.
     @[AlwaysInline]
     def cells(props : Props) : Int32
       ((@classes >> (props.cells << 1)) & 3).to_i32!

@@ -1,4 +1,5 @@
 # src/display_width/tables.cr
+require "./codepoint"
 require "./props"
 
 module DisplayWidth
@@ -42,11 +43,10 @@ module DisplayWidth
     STAGE2_AT = {{ stage2_at }}
   {% end %}
 
-  # :nodoc:
   # Properties of *codepoint*; those of U+0000 (invalid) outside the code space.
   @[AlwaysInline]
-  def self.props(codepoint : Int32) : Props
-    cp = codepoint.to_u32!
+  def self.props(codepoint : Codepoint) : Props
+    cp = ord(codepoint).to_u32!
     cp = 0_u32 if cp > 0x10FFFF
     t = TABLES.to_unsafe
     i = (cp >> SHIFT).to_i32!
