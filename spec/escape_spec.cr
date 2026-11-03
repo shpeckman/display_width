@@ -133,7 +133,7 @@ describe "escape sequences" do
     end
 
     it "are yielded as clusters of no cells" do
-      widths(DisplayWidth::Stream.new) { |stream, found| stream.write("a\e[1mb") { |w| found << w } }.should eq([1, 0, 1])
+      widths { |write| write.call("a\e[1mb") }.should eq([1, 0, 1])
     end
 
     it "end at flush" do

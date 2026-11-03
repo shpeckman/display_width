@@ -4,56 +4,56 @@ require "./spec_helper"
 describe DisplayWidth::Stream do
   describe "#write" do
     it "yields clusters as the next one starts, and the last at flush" do
-      widths(DisplayWidth::Stream.new) { |stream, found| stream.write("ab漢") { |w| found << w } }.should eq([1, 1, 2])
+      widths { |write| write.call("ab漢") }.should eq([1, 1, 2])
     end
 
     it "joins a sequence split across chunks" do
-      widths(DisplayWidth::Stream.new) do |stream, found|
-        stream.write(Bytes[0xE6]) { |w| found << w }
+      widths do |write, found|
+        write.call(Bytes[0xE6])
         found.should be_empty
-        stream.write(Bytes[0xBC]) { |w| found << w }
-        stream.write(Bytes[0xA2, 0x61]) { |w| found << w }
+        write.call(Bytes[0xBC])
+        write.call(Bytes[0xA2, 0x61])
         found.should eq([2])
       end.should eq([2, 1])
     end
 
     it "joins a cluster split across chunks" do
-      widths(DisplayWidth::Stream.new) do |stream, found|
-        stream.write("e") { |w| found << w }
-        stream.write("\u{0301}") { |w| found << w }
-        stream.write("\u{1F469}") { |w| found << w }
-        stream.write("\u{200D}\u{1F4BB}") { |w| found << w }
+      widths do |write|
+        write.call("e")
+        write.call("\u{0301}")
+        write.call("\u{1F469}")
+        write.call("\u{200D}\u{1F4BB}")
       end.should eq([1, 2])
     end
 
     it "replaces a split ill-formed sequence by its maximal subpart" do
-      widths(DisplayWidth::Stream.new) do |stream, found|
-        stream.write(Bytes[0xE2, 0x82]) { |w| found << w }
-        stream.write(Bytes[0x41]) { |w| found << w }
+      widths do |write|
+        write.call(Bytes[0xE2, 0x82])
+        write.call(Bytes[0x41])
       end.should eq([1, 1])
-      widths(DisplayWidth::Stream.new) do |stream, found|
-        stream.write(Bytes[0xF0]) { |w| found << w }
-        stream.write(Bytes[0x80, 0x41]) { |w| found << w }
+      widths do |write|
+        write.call(Bytes[0xF0])
+        write.call(Bytes[0x80, 0x41])
       end.should eq([1, 1, 1])
     end
 
     it "replaces an unfinished sequence at flush" do
-      widths(DisplayWidth::Stream.new) { |stream, found| stream.write(Bytes[0xF0, 0x9F]) { |w| found << w } }.should eq([1])
+      widths { |write| write.call(Bytes[0xF0, 0x9F]) }.should eq([1])
     end
 
     it "takes code points one at a time" do
-      widths(DisplayWidth::Stream.new) do |stream, found|
-        stream.write(0x1F469) { |w| found << w }
-        stream.write('\u{200D}') { |w| found << w }
-        stream.write(0x1F4BB_u32) { |w| found << w }
-        stream.write('a') { |w| found << w }
+      widths do |write|
+        write.call(0x1F469)
+        write.call('\u{200D}')
+        write.call(0x1F4BB_u32)
+        write.call('a')
       end.should eq([2, 1])
     end
 
     it "replaces an unfinished sequence a code point interrupts" do
-      widths(DisplayWidth::Stream.new) do |stream, found|
-        stream.write(Bytes[0xE2]) { |w| found << w }
-        stream.write('a') { |w| found << w }
+      widths do |write|
+        write.call(Bytes[0xE2])
+        write.call('a')
       end.should eq([1, 1])
     end
 
@@ -61,7 +61,7 @@ describe DisplayWidth::Stream do
       stream = DisplayWidth::Stream.new
       stream.write("e") { }
       stream.flush { }
-      widths(stream) { |s, found| s.write("\u{0301}") { |w| found << w } }.should eq([0])
+      widths(stream) { |write| write.call("\u{0301}") }.should eq([0])
     end
   end
 
