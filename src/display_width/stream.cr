@@ -20,7 +20,11 @@ module DisplayWidth
   # cursor.advance('\u{231A}') # => 2
   # cursor.advance('\u{FE0E}') # => -1
   # ```
-  class Stream
+  #
+  # A stream is a struct, so making one allocates nothing. Keep it in a local or an instance
+  # variable and call its methods there: a copy (an argument, a block parameter, a getter's result)
+  # carries on from where it was copied, apart from the original.
+  struct Stream
     @engine : Engine
     @carry = StaticArray(UInt8, 4).new(0_u8)
     @carried = 0

@@ -262,6 +262,10 @@ cursor.advance("mple.org\e\\link")               # => 4
 After `flush`, what follows starts with no cell to join, outside any escape
 sequence.
 
+A `Stream` is a struct, so making one allocates nothing. Keep it in a local or
+an instance variable and call its methods there: a copy (passed as an argument,
+yielded to a block, returned by a getter) carries on apart from the original.
+
 ## Placing code points
 
 A terminal emulator draws text as it arrives, one code point at a time, and
@@ -331,16 +335,16 @@ and an OSC 8 hyperlink.
 
 | Line (bytes)   | `of(String)` | `each_cluster` | `Stream#advance` |
 |----------------|--------------|----------------|------------------|
-| ASCII (85)     | 13 ns        | 42 ns          | 39 ns            |
-| Latin (85)     | 88 ns        | 106 ns         | 98 ns            |
-| CJK (117)      | 208 ns       | 224 ns         | 233 ns           |
-| emoji (135)    | 361 ns       | 362 ns         | 335 ns           |
-| combining (55) | 209 ns       | 207 ns         | 206 ns           |
-| styled (149)   | 223 ns       | 225 ns         | 191 ns           |
+| ASCII (85)     | 16 ns        | 42 ns          | 17 ns            |
+| Latin (85)     | 73 ns        | 103 ns         | 78 ns            |
+| CJK (117)      | 206 ns       | 211 ns         | 238 ns           |
+| emoji (135)    | 295 ns       | 336 ns         | 322 ns           |
+| combining (55) | 172 ns       | 258 ns         | 238 ns           |
+| styled (149)   | 197 ns       | 223 ns         | 195 ns           |
 
-None of them allocates (`Stream.new` allocates the stream once). For comparison,
-the standard library's `String#each_grapheme` takes 1.4 to 6.3 µs on the same
-lines without measuring widths.
+None of them allocates: a `Stream` is a struct. For comparison, the standard
+library's `String#each_grapheme` takes 1.4 to 6.3 µs on the same lines without
+measuring widths.
 
 ## Updating Unicode
 
