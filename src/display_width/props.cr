@@ -53,55 +53,50 @@ module DisplayWidth
           (emoji_base ? 0x80_u16 : 0_u16) | (cells.value.to_u16 << 8) | (invalid ? 0x400_u16 : 0_u16))
     end
 
-    # :nodoc:
     @[AlwaysInline]
-    def gcb : UInt8
+    protected def gcb : UInt8
       (bits & 0xF).to_u8!
     end
 
-    # :nodoc:
     @[AlwaysInline]
-    def incb : UInt8
+    protected def incb : UInt8
       ((bits >> 4) & 3).to_u8!
     end
 
-    # Extended_Pictographic: emoji and the symbols kept for them.
+    # Returns `true` for Extended_Pictographic code points: emoji and the symbols kept for them.
     @[AlwaysInline]
     def pictographic? : Bool
       bits & 0x40 != 0
     end
 
-    # :nodoc:
     @[AlwaysInline]
-    def emoji_base? : Bool
+    protected def emoji_base? : Bool
       bits & 0x80 != 0
     end
 
-    # :nodoc:
     @[AlwaysInline]
-    def cells : UInt8
+    protected def cells : UInt8
       ((bits >> 8) & 3).to_u8!
     end
 
-    # DEL, C1 controls, surrogates and noncharacters (U+0000 too, and with it values outside the code
-    # space): kitty discards them, `Placer` skips them.
+    # Returns `true` for DEL, C1 controls, surrogates and noncharacters (U+0000 too, and with it
+    # values outside the code space): kitty discards them, `Placer` skips them.
     @[AlwaysInline]
     def invalid? : Bool
       bits & 0x400 != 0
     end
 
-    # Grapheme_Cluster_Break=Other, Indic_Conjunct_Break=None and not Extended_Pictographic: such a
-    # code point starts a cluster unless a Prepend came before it, and leaves no segmenter state
-    # (`Placer#plain?`). Invalid code points can be plain too.
+    # Returns `true` for Grapheme_Cluster_Break=Other, Indic_Conjunct_Break=None and not
+    # Extended_Pictographic: such a code point starts a cluster unless a Prepend came before it, and
+    # `Placer#plain?` holds after it. Invalid code points can be plain too.
     @[AlwaysInline]
     def plain? : Bool
       bits & 0x7F == 0
     end
 
-    # :nodoc:
     # A SpacingMark with a width of its own widens the narrow cell it joins (Thai and Lao SARA AM).
     @[AlwaysInline]
-    def widens? : Bool
+    protected def widens? : Bool
       gcb == Break::SpacingMark.value && (cells == Cells::One.value || cells == Cells::Two.value)
     end
   end

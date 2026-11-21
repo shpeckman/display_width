@@ -4,9 +4,8 @@ module DisplayWidth
   # (and surrogates) are invalid code points and take no cells.
   alias Codepoint = Char | Int32 | UInt32
 
-  # :nodoc:
   @[AlwaysInline]
-  def self.ord(codepoint : Codepoint) : Int32
+  protected def self.ord(codepoint : Codepoint) : Int32
     case codepoint
     in Char   then codepoint.ord
     in Int32  then codepoint

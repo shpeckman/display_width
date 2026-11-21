@@ -22,6 +22,7 @@ module DisplayWidth
     getter? escapes : Bool
     @classes : UInt8
 
+    # Creates a policy. Raises `ArgumentError` unless *ambiguous* is 1 or 2.
     def initialize(@ambiguous : Int32 = 1, @graphemes : Bool = true, @escapes : Bool = true)
       unless @ambiguous == 1 || @ambiguous == 2
         raise ArgumentError.new("ambiguous width must be 1 or 2, not #{@ambiguous}")
@@ -29,8 +30,8 @@ module DisplayWidth
       @classes = (0b10_01_00 | (@ambiguous << 6)).to_u8!
     end
 
-    # Cells a code point with *props* takes on its own: 0, 1 or 2. Controls and invalid code points
-    # are the caller's: `DisplayWidth.of` gives them 0.
+    # Returns the cells a code point with *props* takes on its own: 0, 1 or 2. Controls and invalid
+    # code points are the caller's: `DisplayWidth.of` gives them 0.
     @[AlwaysInline]
     def cells(props : Props) : Int32
       ((@classes >> (props.cells << 1)) & 3).to_i32!

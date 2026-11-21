@@ -1,13 +1,13 @@
 # src/display_width/utf8.cr
 module DisplayWidth
-  # :nodoc:
-  module UTF8
+  private module UTF8
     REPLACEMENT = 0xFFFD
 
-    PRINTABLE_LOW  = 0x2020202020202020_u64
-    PRINTABLE_HIGH = 0x7F7F7F7F7F7F7F7F_u64
-    ONES           = 0x0101010101010101_u64
-    HIGH_BITS      = 0x8080808080808080_u64
+    ONES      = 0x0101010101010101_u64
+    HIGH_BITS = 0x8080808080808080_u64
+
+    private PRINTABLE_LOW  = 0x2020202020202020_u64
+    private PRINTABLE_HIGH = 0x7F7F7F7F7F7F7F7F_u64
 
     # Decodes the code point at *ptr* from *avail* (> 0) bytes: `{code point, size}`. An ill-formed
     # sequence decodes to `{REPLACEMENT, size of its maximal subpart}`; a well-formed start cut off

@@ -49,23 +49,24 @@ module DisplayWidth
       Control
     end
 
-    # Cells of the open cluster: 1 or 2 for a cell; 0 for none, a C0 control, or zero-width and
-    # invalid code points with no cell to join.
+    # Returns the cells of the open cluster: 1 or 2 for a cell; 0 for none, a C0 control, or
+    # zero-width and invalid code points with no cell to join.
     getter width = 0
-    # How code points map to cells. A new policy applies from the next code point on.
+    # Returns the policy that maps code points to cells. A new policy applies from the next code
+    # point on.
     property policy : Policy
     @kind = Kind::None
     # The last code point of the open cluster: VS15 and VS16 look at it.
     @last = 0
     @segmenter = Segmenter.new
 
+    # Creates a placer that maps code points to cells by *policy*.
     def initialize(@policy : Policy = Policy.new)
     end
 
-    # :nodoc:
     # Whether a cluster is open: a code point came since `new` or `reset`.
     @[AlwaysInline]
-    def open? : Bool
+    protected def open? : Bool
       !@kind.none?
     end
 
@@ -91,7 +92,7 @@ module DisplayWidth
       @segmenter.reset
     end
 
-    # Whether a code point whose `Props#plain?` holds starts a cell here when it has a width, so that
+    # Returns whether a code point whose `Props#plain?` holds starts a cell here when it has a width, so that
     # `plain!` may stand in for `put`: unless a Prepend came last.
     @[AlwaysInline]
     def plain? : Bool

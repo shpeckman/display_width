@@ -21,29 +21,22 @@ module DisplayWidth
     # Unicode version of the tables.
     UNICODE_VERSION = {{ header[1] }}
 
-    # :nodoc:
-    SHIFT = {{ shift }}
+    private SHIFT = {{ shift }}
 
-    # :nodoc:
-    MASK = {{ (1 << shift) - 1 }}_u32
+    private MASK = {{ (1 << shift) - 1 }}_u32
 
-    # :nodoc:
-    STAGE1_WIDE = {{ header[3] == "2" }}
+    private STAGE1_WIDE = {{ header[3] == "2" }}
 
-    # :nodoc:
-    TABLES = {{ data }}
+    private TABLES = {{ data }}
 
-    # :nodoc:
-    PROPS_AT = {{ props_at }}
+    private PROPS_AT = {{ props_at }}
 
-    # :nodoc:
-    STAGE1_AT = {{ stage1_at }}
+    private STAGE1_AT = {{ stage1_at }}
 
-    # :nodoc:
-    STAGE2_AT = {{ stage2_at }}
+    private STAGE2_AT = {{ stage2_at }}
   {% end %}
 
-  # Properties of *codepoint*; those of U+0000 (invalid) outside the code space.
+  # Returns the properties of *codepoint*; those of U+0000 (invalid) outside the code space.
   @[AlwaysInline]
   def self.props(codepoint : Codepoint) : Props
     cp = ord(codepoint).to_u32!

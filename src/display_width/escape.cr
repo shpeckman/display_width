@@ -2,7 +2,6 @@
 require "./utf8"
 
 module DisplayWidth
-  # :nodoc:
   # Escape sequences as kitty's parser (`kitty/vt-parser.c`) reads them: a code point at a time with
   # `step`, or the bytes that need no decoding at once with `scan`.
   #
@@ -12,15 +11,16 @@ module DisplayWidth
   # (U+0020 to U+003F) and ends with the next code point: a final byte, or anything else, which kitty
   # drops along with the sequence. kitty executes BEL, BS, HT, LF, VT, FF, CR, SO and SI inside a CSI
   # without ending it. A string runs to BEL or ST (ESC \).
-  struct Escape
-    BEL       = 0x07
-    ESC       = 0x1B
-    BACKSLASH = 0x5C
+  private struct Escape
+    ESC = 0x1B
 
-    BELS = 0x0707070707070707_u64
-    ESCS = 0x1B1B1B1B1B1B1B1B_u64
+    private BEL       = 0x07
+    private BACKSLASH = 0x5C
 
-    enum State : UInt8
+    private BELS = 0x0707070707070707_u64
+    private ESCS = 0x1B1B1B1B1B1B1B1B_u64
+
+    private enum State : UInt8
       Ground
       Escape
       Intermediate
@@ -95,7 +95,7 @@ module DisplayWidth
     end
 
     # The state the code point after ESC opens.
-    def self.after_escape(codepoint : Int32) : State
+    protected def self.after_escape(codepoint : Int32) : State
       case codepoint
       when 0x5B                                     then State::CSI
       when 0x5D, 0x50, 0x58, 0x5E, 0x5F             then State::Payload
@@ -107,7 +107,7 @@ module DisplayWidth
     # Number of parameter and intermediate bytes (U+0020 to U+003F) at the start of *ptr*, at most
     # *avail*: the part of a CSI that changes nothing.
     @[AlwaysInline]
-    def self.parameters(ptr : UInt8*, avail : Int32) : Int32
+    protected def self.parameters(ptr : UInt8*, avail : Int32) : Int32
       n = 0
       while n < avail && ptr[n] &- 0x20 < 0x20
         n &+= 1
@@ -118,7 +118,7 @@ module DisplayWidth
     # Number of bytes at the start of *ptr*, at most *avail*, before a BEL or an ESC: the part of a
     # string payload that changes nothing.
     @[AlwaysInline]
-    def self.payload(ptr : UInt8*, avail : Int32) : Int32
+    protected def self.payload(ptr : UInt8*, avail : Int32) : Int32
       n = 0
       while n &+ 8 <= avail
         word = uninitialized UInt64

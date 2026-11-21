@@ -11,9 +11,9 @@ module DisplayWidth
     Center
   end
 
-  # The longest start of *text* that takes at most *cells* cells, as `{bytes, width}`. It ends at a
-  # cluster boundary, and takes in the zero-width clusters (escape sequences, controls) before the
-  # first cluster that does not fit.
+  # Returns the longest start of *text* that takes at most *cells* cells, as `{bytes, width}`. It
+  # ends at a cluster boundary, and takes in the zero-width clusters (escape sequences, controls)
+  # before the first cluster that does not fit.
   #
   # ```
   # DisplayWidth.fit("漢字abc", 3) # => {3, 2}
@@ -33,9 +33,9 @@ module DisplayWidth
     {bytes.size, used}
   end
 
-  # *text* cut to at most *cells* cells, ending in *tail* where it was cut. Text that fits comes back
-  # as it is. The escape sequences after the cut are kept, after *tail*, so styles and hyperlinks end
-  # as they would have; *tail* is left out when it does not fit by itself.
+  # Returns *text* cut to at most *cells* cells, ending in *tail* where it was cut. Text that fits
+  # comes back as it is. The escape sequences after the cut are kept, after *tail*, so styles and
+  # hyperlinks end as they would have; *tail* is left out when it does not fit by itself.
   #
   # ```
   # DisplayWidth.truncate("hello world", 8)               # => "hello w…"
@@ -72,8 +72,8 @@ module DisplayWidth
     end
   end
 
-  # *text* padded with spaces to *cells* cells, placed by *align*; `Align::Center` puts an odd space
-  # on the right. Text that takes *cells* or more comes back as it is.
+  # Returns *text* padded with spaces to *cells* cells, placed by *align*; `Align::Center` puts an
+  # odd space on the right. Text that takes *cells* or more comes back as it is.
   #
   # ```
   # DisplayWidth.pad("漢", 4)           # => "漢  "
@@ -91,8 +91,9 @@ module DisplayWidth
     spaced(io, text, cells &- of(text, policy), align)
   end
 
-  # Byte offset of the cluster that covers *column* (from 0) when *text* is drawn from column 0, or
-  # the size of *text* when *column* is past its last cell. Zero-width clusters cover no column.
+  # Returns the byte offset of the cluster that covers *column* (from 0) when *text* is drawn from
+  # column 0, or the size of *text* when *column* is past its last cell. Zero-width clusters cover
+  # no column.
   #
   # ```
   # DisplayWidth.offset_at("a漢b", 2) # => 1
@@ -113,9 +114,9 @@ module DisplayWidth
     bytes.size
   end
 
-  # The column the cursor reaches when one line of *text* is drawn from column *from*: a cluster
-  # moves it by its width, a tab to the next multiple of *tab*. Other controls leave it in place.
-  # Raises `ArgumentError` when *tab* is less than 1.
+  # Returns the column the cursor reaches when one line of *text* is drawn from column *from*: a
+  # cluster moves it by its width, a tab to the next multiple of *tab*. Other controls leave it in
+  # place. Raises `ArgumentError` when *tab* is less than 1.
   #
   # ```
   # DisplayWidth.column("a\tb")         # => 9

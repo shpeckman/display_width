@@ -9,26 +9,26 @@ module DisplayWidth
   # GB11 progress (bits 4-5: 1 after ExtPict Extend*, 2 after ExtPict Extend* ZWJ), an odd number of
   # regional indicators so far (bit 6, GB12 and GB13) and InCB=Linker InCB=Extend* last (bit 7, GB9c).
   struct Segmenter
-    START  =   14_u8
-    ODD    = 0x40_u8
-    LINKER = 0x80_u8
+    private START  =   14_u8
+    private ODD    = 0x40_u8
+    private LINKER = 0x80_u8
 
     @state = START
 
-    def reset : Nil
+    protected def reset : Nil
       @state = START
     end
 
     # Whether a code point whose `Props#plain?` holds (printable ASCII among them) starts a cluster
     # here: unless a Prepend came last, as `step` decides for them.
     @[AlwaysInline]
-    def plain? : Bool
+    protected def plain? : Bool
       @state & 0xF != Break::Prepend.value
     end
 
     # Moves past printable ASCII.
     @[AlwaysInline]
-    def plain! : Nil
+    protected def plain! : Nil
       @state = Break::Other.value
     end
 
@@ -64,7 +64,7 @@ module DisplayWidth
 
     # Grapheme_Cluster_Break values (as bits) never broken from a preceding *prev*: rules GB3 to GB9b.
     @[AlwaysInline]
-    def self.joins(prev : UInt8) : UInt16
+    protected def self.joins(prev : UInt8) : UInt16
       extending = bit(Break::Extend) | bit(Break::ZWJ) | bit(Break::SpacingMark)
       case prev
       when Break::CR.value

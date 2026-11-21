@@ -29,6 +29,7 @@ module DisplayWidth
     @carry = StaticArray(UInt8, 4).new(0_u8)
     @carried = 0
 
+    # Creates a stream that maps text to cells by *policy*.
     def initialize(policy : Policy = Policy.new)
       @engine = Engine.new(policy)
     end

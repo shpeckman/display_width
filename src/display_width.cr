@@ -18,7 +18,8 @@ require "./display_width/layout"
 # # {1, 8, 2}
 # ```
 module DisplayWidth
-  # Cells *codepoint* takes on its own: 0, 1 or 2. C0 controls and invalid code points take 0.
+  # Returns the cells *codepoint* takes on its own: 0, 1 or 2. C0 controls and invalid code points
+  # take 0.
   def self.of(codepoint : Codepoint, policy : Policy = Policy.new) : Int32
     cp = ord(codepoint)
     return 0 if cp.to_u32! < 0x20
@@ -26,7 +27,8 @@ module DisplayWidth
     props.invalid? ? 0 : policy.cells(props)
   end
 
-  # Cells *text* takes, the sum of its clusters' widths. Ill-formed UTF-8 counts as U+FFFD.
+  # Returns the cells *text* takes, the sum of its clusters' widths. Ill-formed UTF-8 counts as
+  # U+FFFD.
   def self.of(text : String, policy : Policy = Policy.new) : Int32
     of(text.to_slice, policy)
   end
@@ -38,7 +40,7 @@ module DisplayWidth
     engine.total
   end
 
-  # Cells a sequence of code points takes, the sum of its clusters' widths.
+  # Returns the cells *codepoints* take, the sum of their clusters' widths.
   def self.of(codepoints : Enumerable(Char) | Enumerable(Int32) | Enumerable(UInt32), policy : Policy = Policy.new) : Int32
     engine = Engine.new(policy)
     codepoints.each { |codepoint| engine.put(ord(codepoint), 0) { } }

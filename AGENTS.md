@@ -61,18 +61,17 @@ crystal docs src/display_width.cr -o /tmp/<dir>
 
 ## `:nodoc:` inventory
 
-Public but internal, in 8 files; `tools/gen_tables.cr` uses `Props.pack`:
+Public but internal, in 2 files:
 
-- `codepoint.cr`: `DisplayWidth.ord`.
-- `engine.cr`: `Engine`.
-- `escape.cr`: `Escape`.
-- `placer.cr`: `Placer#open?`.
-- `props.cr`: `Break`, `Conjunct`, `Cells`; `Props.pack`, `#gcb`, `#incb`,
-  `#emoji_base?`, `#cells`, `#widens?`.
-- `segmenter.cr`: `Segmenter`.
-- `tables.cr`: `SHIFT`, `MASK`, `STAGE1_WIDE`, `TABLES`, `PROPS_AT`,
-  `STAGE1_AT`, `STAGE2_AT`.
-- `utf8.cr`: `UTF8`.
+- `props.cr`: `Break`, `Conjunct`, `Cells`, `Props.pack`; used by
+  `tools/gen_tables.cr`.
+- `segmenter.cr`: `Segmenter` (`new`, `step`); used by
+  `spec/conformance_spec.cr`.
+
+Everything else internal is `private` or `protected`: `Engine`, `Escape`
+and `UTF8` are private types, the table constants in `tables.cr` are
+private, and `DisplayWidth.ord`, `Placer#open?` and the `Props` readers
+`#gcb`, `#incb`, `#emoji_base?`, `#cells`, `#widens?` are protected.
 
 Users: asekii and asekii-app use only public API, none of the `:nodoc:`
 items. asekii (`src/asekii/terminal.cr`, `terminal/parser.cr`,

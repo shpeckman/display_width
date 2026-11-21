@@ -4,7 +4,6 @@ require "./escape"
 require "./utf8"
 
 module DisplayWidth
-  # :nodoc:
   # kitty's algorithm for splitting text into cells over `Placer`, holding back the cluster still
   # open: a C0 control is a cluster of its own, invalid code points join the open cluster, and
   # zero-width code points with no cell to join form a zero-width cluster.
@@ -16,12 +15,12 @@ module DisplayWidth
   # is `NOTHING`, no sequence is open or held back, and code points take the fast path.
   #
   # Clusters are yielded as offset, size, width and whether they are escape sequences.
-  struct Engine
+  private struct Engine
     # `@held` when no escape sequence is open or held back.
-    NOTHING = -1
+    private NOTHING = -1
     # `@held` when a sequence is open but none of it is held back: a control inside a CSI took its
     # start into a cluster.
-    OPEN = -2
+    private OPEN = -2
 
     # Cells of the clusters closed so far.
     @done = 0
