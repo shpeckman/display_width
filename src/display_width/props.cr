@@ -1,4 +1,3 @@
-# src/display_width/props.cr
 module DisplayWidth
   # :nodoc:
   enum Break : UInt8

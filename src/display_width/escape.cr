@@ -1,4 +1,3 @@
-# src/display_width/escape.cr
 require "./utf8"
 
 module DisplayWidth

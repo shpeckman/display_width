@@ -1,4 +1,3 @@
-# src/display_width.cr
 require "./display_width/codepoint"
 require "./display_width/placer"
 require "./display_width/engine"

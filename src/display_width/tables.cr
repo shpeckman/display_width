@@ -1,4 +1,3 @@
-# src/display_width/tables.cr
 require "./codepoint"
 require "./props"
 

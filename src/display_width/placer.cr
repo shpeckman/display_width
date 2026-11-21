@@ -1,4 +1,3 @@
-# src/display_width/placer.cr
 require "./codepoint"
 require "./tables"
 require "./segmenter"

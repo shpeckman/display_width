@@ -1,4 +1,3 @@
-# src/display_width/policy.cr
 require "./props"
 
 module DisplayWidth

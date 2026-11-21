@@ -1,4 +1,3 @@
-# src/display_width/engine.cr
 require "./placer"
 require "./escape"
 require "./utf8"

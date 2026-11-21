@@ -1,4 +1,3 @@
-# src/display_width/codepoint.cr
 module DisplayWidth
   # A code point: a `Char`, or its value as an `Int32` or `UInt32`. Values outside the code space
   # (and surrogates) are invalid code points and take no cells.

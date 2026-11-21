@@ -1,4 +1,3 @@
-# src/display_width/layout.cr
 require "./engine"
 
 module DisplayWidth

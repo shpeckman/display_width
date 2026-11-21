@@ -1,4 +1,3 @@
-# src/display_width/utf8.cr
 module DisplayWidth
   private module UTF8
     REPLACEMENT = 0xFFFD

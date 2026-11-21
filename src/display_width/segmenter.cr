@@ -1,4 +1,3 @@
-# src/display_width/segmenter.cr
 require "./tables"
 
 module DisplayWidth

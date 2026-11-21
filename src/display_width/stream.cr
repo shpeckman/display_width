@@ -1,4 +1,3 @@
-# src/display_width/stream.cr
 require "./codepoint"
 require "./engine"
 
