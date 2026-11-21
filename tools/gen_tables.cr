@@ -1,10 +1,10 @@
 # tools/gen_tables.cr
 #
-# Generates data/tables.bin (the per-code-point `DisplayWidth::Props`, embedded by
-# src/display_width/tables.cr) and the conformance data in spec/data from the Unicode Character
+# Generates src/display_width/data/tables.bin (the per-code-point `DisplayWidth::Props`, embedded
+# by src/display_width/tables.cr) and the conformance data in spec/data from the Unicode Character
 # Database. Cell widths follow kitty's rules (docs/text-sizing-protocol, gen/wcwidth.py).
 #
-# data/tables.bin: the ASCII header line "DISPLAY-WIDTH <version> <shift> <stage-1 entry bytes>
+# tables.bin: the ASCII header line "DISPLAY-WIDTH <version> <shift> <stage-1 entry bytes>
 # <props>\n", then the distinct props (little-endian UInt16 each), stage 1 (the block of every
 # 2**shift code points, little-endian, 1 or 2 bytes each) and stage 2 (a props index per code
 # point of each block).
@@ -15,7 +15,7 @@ require "../src/display_width/props"
 
 UNICODE_VERSION = "18.0.0"
 SOURCE          = "https://www.unicode.org/Public/#{UNICODE_VERSION}"
-OUT_TABLES      = "data/tables.bin"
+OUT_TABLES      = "src/display_width/data/tables.bin"
 OUT_SPEC        = "spec/data"
 MAGIC           = "DISPLAY-WIDTH"
 SIZE            = 0x110000

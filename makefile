@@ -18,5 +18,5 @@ bench:              ## Run bench suite
 	./bench-suite
 	@rm -f bench-suite
 
-tables:             ## Regenerate data/tables.bin and spec/data from unicode.org (UCD=dir for a local mirror)
+tables:             ## Regenerate src/display_width/data/tables.bin and spec/data from unicode.org (UCD=dir for a local mirror)
 	$(CRYSTAL) run --threads $(THREADS) tools/gen_tables.cr -- $(UCD)

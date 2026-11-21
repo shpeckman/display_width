@@ -9,22 +9,27 @@ Namespace `DisplayWidth`. No dependencies; Crystal >= 1.21.
 
 ## Layout
 
-- `src/display_width.cr`: entry; `DisplayWidth.of` and `DisplayWidth.each_cluster`.
-- `src/display_width/codepoint.cr`: `Codepoint` alias (`Char | Int32 | UInt32`), `ord`.
-- `src/display_width/props.cr`: `Props` (packed per-code-point bits) and the `Break`, `Conjunct`, `Cells` enums.
-- `src/display_width/tables.cr`: embeds `data/tables.bin` at compile time, `UNICODE_VERSION`, `DisplayWidth.props`.
-- `src/display_width/policy.cr`: `Policy` (*ambiguous*, *graphemes*, *escapes*), `Policy#cells`.
-- `src/display_width/segmenter.cr`: `Segmenter`, UAX #29 boundaries one code point at a time.
-- `src/display_width/placer.cr`: `Placer`, kitty's placement of code points in cells (`Step`).
-- `src/display_width/escape.cr`: `Escape`, escape sequences as kitty's parser reads them.
-- `src/display_width/utf8.cr`: `UTF8`, decoding with U+FFFD per maximal subpart and the ASCII fast path.
-- `src/display_width/engine.cr`: `Engine`, clusters over `Placer` and `Escape`, shared by the API.
-- `src/display_width/stream.cr`: `Stream`, `write`/`advance`/`flush` for chunked input.
-- `src/display_width/layout.cr`: `Align`, `fit`, `truncate`, `pad`, `offset_at`, `column`.
-- `data/tables.bin`: generated tables (header line, distinct props, stage 1, stage 2).
-- `tools/gen_tables.cr`: regenerates `data/tables.bin` and `spec/data`.
-- `bench/`: `all.cr` runs `width.cr` with `bench_helper.cr`.
-- `spec/`: specs per module; `conformance_spec.cr` reads `spec/data`.
+```tree
+.
+├─╴src/
+│  ├─╴display_width.cr      entry; `DisplayWidth.of` and `DisplayWidth.each_cluster`.
+│  ╰─╴display_width/
+│     ├─╴codepoint.cr       `Codepoint` alias (`Char | Int32 | UInt32`), `ord`.
+│     ├─╴engine.cr          `Engine`, clusters over `Placer` and `Escape`, shared by the API.
+│     ├─╴escape.cr          `Escape`, escape sequences as kitty's parser reads them.
+│     ├─╴layout.cr          `Align`, `fit`, `truncate`, `pad`, `offset_at`, `column`.
+│     ├─╴placer.cr          `Placer`, kitty's placement of code points in cells (`Step`).
+│     ├─╴policy.cr          `Policy` (*ambiguous*, *graphemes*, *escapes*), `Policy#cells`.
+│     ├─╴props.cr           `Props` (packed per-code-point bits) and the `Break`, `Conjunct`, `Cells` enums.
+│     ├─╴segmenter.cr       `Segmenter`, UAX #29 boundaries one code point at a time.
+│     ├─╴stream.cr          `Stream`, `write`/`advance`/`flush` for chunked input.
+│     ├─╴tables.cr          embeds `src/display_width/data/tables.bin` at compile time, `UNICODE_VERSION`, `DisplayWidth.props`.
+│     ├─╴utf8.cr            `UTF8`, decoding with U+FFFD per maximal subpart and the ASCII fast path.
+│     ╰─╴data/tables.bin    generated tables (header line, distinct props, stage 1, stage 2).
+├─╴tools/gen_tables.cr      regenerates `src/display_width/data/tables.bin` and `spec/data`.
+├─╴spec/                    specs per module; `conformance_spec.cr` reads `spec/data`.
+╰─╴bench/                   `all.cr` runs `width.cr` with `bench_helper.cr`.
+```
 
 ## Commands
 
@@ -41,11 +46,11 @@ crystal docs src/display_width.cr -o /tmp/<dir>
 - Tables: the Unicode version is `UNICODE_VERSION` in
   `tools/gen_tables.cr` (sources from
   `https://www.unicode.org/Public/<version>`). `make tables` rewrites
-  `data/tables.bin` and `spec/data` (`GraphemeBreakTest.txt`,
+  `src/display_width/data/tables.bin` and `spec/data` (`GraphemeBreakTest.txt`,
   `emoji-qualified.txt`, `emoji-variation-sequences.txt`); run
   `make spec` after it. `src/display_width/tables.cr` checks the header at
   compile time and raises "run make tables" on a bad or truncated file.
-  Don't edit `data/tables.bin` or `spec/data` by hand.
+  Don't edit `src/display_width/data/tables.bin` or `spec/data` by hand.
 - One Crystal compile at a time; never run builds, specs, benches or docs
   in parallel.
 - Docs: the repo tracks no `docs/` (git-ignored); generate into a
@@ -54,7 +59,9 @@ crystal docs src/display_width.cr -o /tmp/<dir>
   `Policy`, `Props` and `Stream`.
 - Format only the files you touched: `dev crystal tool format <files>`.
 
-`:nodoc:` inventory (8 files):
+## `:nodoc:` inventory
+
+Public but internal, in 8 files; `tools/gen_tables.cr` uses `Props.pack`:
 
 - `codepoint.cr`: `DisplayWidth.ord`.
 - `engine.cr`: `Engine`.
@@ -80,17 +87,79 @@ items. asekii (`src/asekii/terminal.cr`, `terminal/parser.cr`,
 
 - Compiler-friendly, performance-focused, idiomatic Crystal.
 - Data-driven design: tables and records over branching logic.
-- Every file starts with a comment holding its path (`# src/display_width.cr`).
 - The public API must be ergonomic.
 - Avoid shotgun surgery: one change, one place.
-- No stubs or placeholders; don't add functionality nobody asked for.
+- Deliver complete files: no stubs or placeholders, everything discussed
+  fully implemented; don't add functionality nobody asked for.
 - Never change the version in shard.yml.
-- Visibility: `private` for internal code, `protected` for callers in the
-  same namespace, `# :nodoc:` as the first doc line for public but internal
-  code. Check with `crystal docs`.
-- Doc comments: third person present, *param* in italics, backtick
-  references, `:ditto:`; no implementation details; public docs never
-  reference private or `:nodoc:` items.
-- Keep README.md and AGENTS.md in sync with the code.
-- Work on `dev`, never `main`.
-- Prefix shell commands that change files with `dev`.
+- Every file starts with a comment holding its path (`# src/display_width.cr`).
+
+### Visibility
+
+Expose only what users need; the compiler enforces the rest.
+
+- `private` for types, constants and methods used only inside their own
+  type or namespace.
+- `protected` for methods that other types in the same namespace call.
+- `# :nodoc:` as the first line of the doc comment for public code that
+  other shards or the specs must reach but users should not use. Internal
+  notes may follow the directive.
+- Everything else is the public API: documented, ergonomic and kept stable.
+- Check with `crystal docs`: the generated API must show only the intended
+  public surface.
+
+### Doc comments
+
+- The first sentence says what the feature does or returns, in third
+  person present ("Returns …").
+- Add a paragraph only for contracts the caller cannot infer (lifetime,
+  ownership, required flags, what raises) or for a short example in a code
+  block.
+- No implementation details, algorithms, byte layouts or tuning notes;
+  those go in a plain comment after `:nodoc:` or in this file.
+- No comments on self-explanatory getters and predicates.
+- Italicize parameters (`*name*`); reference features in backticks
+  (`` `#method` ``, `` `.new` ``, `` `Type` ``) so they link; `:ditto:` for
+  overloads.
+- Never reference private or `:nodoc:` features from public doc comments.
+
+### Documentation
+
+Keep both files in sync with the code:
+
+- `README.md`: usage and the documented public API only, plus user-visible
+  details too long for doc comments.
+- `AGENTS.md`: repository layout, commands, these standards and everything
+  `:nodoc:`.
+
+### Releases
+
+- Work on `dev` or a feature branch, never `main`.
+- Ship only when the user asks.
+- Prefix shell commands that change files with `dev`; it bounds their
+  output and records the changed files in a journal with undo.
+
+## Modes
+
+- Analysis Mode is the default at conversation start; `/dev:analyze`
+  switches to it, `/dev:code` to Code Mode. A mode stays active until the
+  other command is used.
+- Begin every message with `ANALYSIS MODE` or `CODE MODE`.
+- Analysis Mode: write no code, except small snippets that clarify a
+  point. When the user provides code at the start of a conversation,
+  describe what it does; don't scrutinize or critique it.
+- Code Mode: the code standards above apply, also to snippets shown in
+  Analysis Mode.
+
+## Behavior
+
+- Follow explicit user scope for files, directories and repositories;
+  the current directory is only the fallback when no scope is stated.
+- Always write in English, whatever language the user writes in.
+- Take responsibility for mistakes: own and correct them.
+- Search online before making factual claims, when online search is
+  available.
+- Respond like a smart caveman, also when thinking: no articles, filler,
+  pleasantries or hedging; fragments are fine.
+- Technical terms stay exact; code blocks stay unchanged.
+- Pattern: [thing] [action] [reason]. [next step].

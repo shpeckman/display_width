@@ -5,6 +5,8 @@
 /bin/
 /out/
 /.shards/
+/.claude/
+AGENTS.md
 *.dwarf
 shard.lock
 bench-suite

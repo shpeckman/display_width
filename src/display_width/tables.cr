@@ -4,18 +4,18 @@ require "./props"
 
 module DisplayWidth
   {% begin %}
-    {% data = read_file("#{__DIR__}/../../data/tables.bin") %}
+    {% data = read_file("#{__DIR__}/data/tables.bin") %}
     {% line = data.lines.first %}
     {% header = line.split(" ") %}
     {% unless header.size == 5 && header[0] == "DISPLAY-WIDTH" && (header[3] == "1" || header[3] == "2") %}
-      {% raise "data/tables.bin: not a display_width table (run make tables)" %}
+      {% raise "src/display_width/data/tables.bin: not a display_width table (run make tables)" %}
     {% end %}
     {% shift = header[2].to_i %}
     {% props_at = line.size + 1 %}
     {% stage1_at = props_at + 2 * header[4].to_i %}
     {% stage2_at = stage1_at + header[3].to_i * (0x110000 >> shift) %}
     {% unless data.bytesize > stage2_at && (data.bytesize - stage2_at) % (1 << shift) == 0 %}
-      {% raise "data/tables.bin: truncated (run make tables)" %}
+      {% raise "src/display_width/data/tables.bin: truncated (run make tables)" %}
     {% end %}
 
     # Unicode version of the tables.

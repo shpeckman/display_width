@@ -348,7 +348,7 @@ measuring widths.
 
 ## Updating Unicode
 
-The tables live in `data/tables.bin` (about 34 KB), embedded at compile time.
+The tables live in `src/display_width/data/tables.bin` (about 34 KB), embedded at compile time.
 `make tables` regenerates it, with the conformance data in `spec/data`, from
 unicode.org; `make tables UCD=dir` reads a local mirror of
 `Public/<version>/` instead. The Unicode version is `UNICODE_VERSION` in
